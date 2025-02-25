@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import TimeSeriesChart from './TimeSeriesChart';
+import BarChart from './BarChart';
 
 function Dashboard() {
   const [data, setData] = useState([]);
@@ -46,8 +46,8 @@ function Dashboard() {
 
   return (
     <div>
-      <h1>Time Series Dashboard</h1>
-      {data.length > 0 ? <TimeSeriesChart data={data} /> : <p>Loading data...</p>}
+      <h1>BarChart Dashboard</h1>
+      {data.length > 0 ? <BarChart data={data} /> : <p>Loading data...</p>}
     </div>
   );
 }
