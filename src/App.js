@@ -1,10 +1,13 @@
 import React from 'react';
-import BarChart from './BarChart';
+import Scatterplot from './Scatterplot';
+import GroupedBarChart from './GroupedBarChart';
 
 function App() {
   return (
     <div className="App">
-      <BarChart />
+      <h1>Insurance Rates vs. Crash Rates</h1>
+      <Scatterplot />
+      <GroupedBarChart />
     </div>
   );
 }
