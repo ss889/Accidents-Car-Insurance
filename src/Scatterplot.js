@@ -7,14 +7,14 @@ const Scatterplot = () => {
   useEffect(() => {
     // Load both CSV files
     Promise.all([
-      d3.csv('/Data2.csv'), // Replace with your insurance rates CSV
-      d3.csv('/Data.csv')      // Replace with your crash rates CSV
+      d3.csv('/Data2.csv'), // Insurance rates
+      d3.csv('/Data.csv')   // Crash rates
     ]).then(([insuranceData, crashData]) => {
-      // Combine the data
+      // Clean and combine the data
       const combinedData = insuranceData.map((insurance, i) => ({
-        state: insurance.state, // Replace 'state' with the actual column name
-        insuranceRate: +insurance.rate, // Replace 'rate' with the actual column name
-        crashRate: +crashData[i].rate    // Replace 'rate' with the actual column name
+        state: insurance.State,
+        insuranceRate: +insurance['Avg annual cost'].replace(/[^0-9.-]+/g, ''), // Remove $ and commas
+        crashRate: +crashData[i]['Total Crashes Liability'].replace(/[^0-9.-]+/g, '') // Remove commas
       }));
 
       // Declare the chart dimensions and margins.
