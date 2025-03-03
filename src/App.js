@@ -1,6 +1,7 @@
 import React from 'react';
 import Scatterplot from './Scatterplot';
 import GroupedBarChart from './GroupedBarChart';
+import './App.css';
 
 function App() {
   return (
