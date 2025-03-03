@@ -5,17 +5,11 @@ const GroupedBarChart = () => {
   const chartRef = useRef();
 
   useEffect(() => {
-  // Load and process data
-  Promise.all([
-    d3.csv('/Data2.csv'),
-    d3.csv('/Data.csv')
-  ]).then(([insuranceData, crashData]) => {
-    // Data processing and chart rendering
-  }).catch((error) => {
-    console.error('Error loading or processing CSV files:', error);
-  });
-}, []); // Empty dependency array ensures this runs only once
-
+    // Load both CSV files
+    Promise.all([
+      d3.csv('/Data2.csv'), // Insurance rates
+      d3.csv('/Data.csv')   // Crash rates
+    ]).then(([insuranceData, crashData]) => {
       // Clean and combine the data
       const combinedData = insuranceData.map((insurance, i) => {
         if (!insurance || !crashData[i]) {
@@ -37,8 +31,6 @@ const GroupedBarChart = () => {
           crashRate: +crashRate
         };
       }).filter(d => d !== null);
-
-      console.log('Combined Data:', combinedData);
 
       // Declare the chart dimensions and margins.
       const width = 800;
@@ -133,7 +125,7 @@ const GroupedBarChart = () => {
         .text(d => d)
         .attr('font-size', '12px')
         .attr('fill', 'black');
-    }).catch((error) => {
+    }).catch((error) => { // Fixed: Added parentheses around `error`
       console.error('Error loading or processing CSV files:', error);
     });
   }, []);
