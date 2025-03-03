@@ -10,12 +10,32 @@ const GroupedBarChart = () => {
       d3.csv('/Data2.csv'), // Insurance rates
       d3.csv('/Data.csv')   // Crash rates
     ]).then(([insuranceData, crashData]) => {
+      console.log('Insurance Data:', insuranceData);
+      console.log('Crash Data:', crashData);
+
       // Clean and combine the data
-      const combinedData = insuranceData.map((insurance, i) => ({
-        state: insurance.State,
-        insuranceRate: +insurance['Avg annual cost'].replace(/[^0-9.-]+/g, ''), // Remove $ and commas
-        crashRate: +crashData[i]['Total Crashes Liability'].replace(/[^0-9.-]+/g, '') // Remove commas
-      }));
+      const combinedData = insuranceData.map((insurance, i) => {
+        if (!insurance || !crashData[i]) {
+          console.error('Missing data for row:', i);
+          return null;
+        }
+
+        const insuranceRate = insurance['Avg annual cost']?.replace(/[^0-9.-]+/g, '');
+        const crashRate = crashData[i]['Total Crashes Liability']?.replace(/[^0-9.-]+/g, '');
+
+        if (!insuranceRate || !crashRate) {
+          console.error('Invalid data for row:', i);
+          return null;
+        }
+
+        return {
+          state: insurance.State,
+          insuranceRate: +insuranceRate,
+          crashRate: +crashRate
+        };
+      }).filter(d => d !== null);
+
+      console.log('Combined Data:', combinedData);
 
       // Declare the chart dimensions and margins.
       const width = 800;
@@ -110,6 +130,8 @@ const GroupedBarChart = () => {
         .text(d => d)
         .attr('font-size', '12px')
         .attr('fill', 'black');
+    }).catch((error) => {
+      console.error('Error loading or processing CSV files:', error);
     });
   }, []);
 
