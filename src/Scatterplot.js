@@ -5,16 +5,19 @@ const Scatterplot = () => {
   const chartRef = useRef();
 
   useEffect(() => {
-    // Load both CSV files
-    Promise.all([
-      d3.csv('/Data2.csv'), // Insurance rates
-      d3.csv('/Data.csv')   // Crash rates
-    ]).then(([insuranceData, crashData]) => {
-      console.log('Insurance Data:', insuranceData);
-      console.log('Crash Data:', crashData);
+  // Load and process data
+  Promise.all([
+    d3.csv('/Data2.csv'),
+    d3.csv('/Data.csv')
+  ]).then(([insuranceData, crashData]) => {
+    // Data processing and chart rendering
+  }).catch((error) => {
+    console.error('Error loading or processing CSV files:', error);
+  });
+}, []); // Empty dependency array ensures this runs only once
 
-      // Clean and combine the data
-      const combinedData = insuranceData.map((insurance, i) => {
+// Clean and combine the data
+  const combinedData = insuranceData.map((insurance, i) => {
         if (!insurance || !crashData[i]) {
           console.error('Missing data for row:', i);
           return null;
