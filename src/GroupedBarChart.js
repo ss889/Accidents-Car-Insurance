@@ -125,10 +125,10 @@ const GroupedBarChart = () => {
         .text(d => d)
         .attr('font-size', '12px')
         .attr('fill', 'black');
-    }).catch((error) => { // Fixed: Added parentheses around `error`
-      console.error('Error loading or processing CSV files:', error);
+    }).catch((error) => {
+      console.error('Error loading or processing CSV files:', error); // Error handling
     });
-  }, []);
+  }, []); // <-- Empty dependency array ensures this runs only once
 
   return <div ref={chartRef}></div>;
 };
