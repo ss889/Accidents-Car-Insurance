@@ -100,10 +100,10 @@ const Scatterplot = () => {
         .text(d => d.state)
         .attr('font-size', '10px')
         .attr('fill', 'black');
-    }).catch((error) => { // Fixed: Added parentheses around `error`
-      console.error('Error loading or processing CSV files:', error);
+    }).catch((error) => {
+      console.error('Error loading or processing CSV files:', error); // Error handling
     });
-  }, []);
+  }, []); // <-- Empty dependency array ensures this runs only once
 
   return <div ref={chartRef}></div>;
 };
