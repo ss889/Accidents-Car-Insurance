@@ -7,8 +7,8 @@ function App() {
   return (
     <div className="App">
       <h1>Insurance Rates vs. Crash Rates</h1>
-      <Scatterplot />
-      <GroupedBarChart />
+      //<Scatterplot />
+      //<GroupedBarChart />
     </div>
   );
 }
