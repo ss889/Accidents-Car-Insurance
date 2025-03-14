@@ -1,36 +1,39 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 
-const GroupedBarChart = () => {
+const GroupedBarChartPopulation = () => {
   const chartRef = useRef();
 
   useEffect(() => {
     // Load both CSV files
     Promise.all([
       d3.csv('/Data2.csv'), // Insurance rates
-      d3.csv('/Data.csv')   // Crash rates
-    ]).then(([insuranceData, crashData]) => {
+      d3.csv('/Population.csv') // Population density
+    ]).then(([insuranceData, populationData]) => {
       // Clean and combine the data
-      const combinedData = insuranceData.map((insurance, i) => {
-        if (!insurance || !crashData[i]) {
-          console.error('Missing data for row:', i);
+      const combinedData = insuranceData.map((insurance) => {
+        const population = populationData.find(p => p.State === insurance.State);
+        if (!insurance || !population) {
+          console.error('Missing data for state:', insurance?.State);
           return null;
         }
 
         const insuranceRate = insurance['Avg annual cost']?.replace(/[^0-9.-]+/g, '');
-        const crashRate = crashData[i]['Total Crashes Liability']?.replace(/[^0-9.-]+/g, '');
+        const populationDensity = population['Population Density (people/sq. mile)']?.replace(/[^0-9.-]+/g, '');
 
-        if (!insuranceRate || !crashRate) {
-          console.error('Invalid data for row:', i);
+        if (!insuranceRate || !populationDensity) {
+          console.error('Invalid data for state:', insurance.State);
           return null;
         }
 
         return {
           state: insurance.State,
           insuranceRate: +insuranceRate,
-          crashRate: +crashRate
+          populationDensity: +populationDensity
         };
       }).filter(d => d !== null);
+
+      console.log('Combined Data:', combinedData); // Debug: Check combined data
 
       // Declare the chart dimensions and margins.
       const width = 800;
@@ -40,13 +43,16 @@ const GroupedBarChart = () => {
       const marginBottom = 50;
       const marginLeft = 50;
 
+      // Clear any existing SVG content
+      d3.select(chartRef.current).selectAll('*').remove();
+
       // Create the SVG container.
       const svg = d3.select(chartRef.current)
         .append('svg')
         .attr('width', width)
         .attr('height', height)
         .attr('viewBox', [0, 0, width, height])
-        .attr('style', 'max-width: 100%; height: auto;');
+        .attr('style', 'max-width: 100%; height: auto; border: 1px solid red;'); // Add a red border for debugging
 
       // Declare the x (horizontal position) scale.
       const x = d3.scaleBand()
@@ -56,7 +62,7 @@ const GroupedBarChart = () => {
 
       // Declare the y (vertical position) scale.
       const y = d3.scaleLinear()
-        .domain([0, d3.max(combinedData, d => Math.max(d.insuranceRate, d.crashRate))])
+        .domain([0, d3.max(combinedData, d => Math.max(d.insuranceRate, d.populationDensity))])
         .range([height - marginBottom, marginTop]);
 
       // Add bars for insurance rates.
@@ -70,15 +76,15 @@ const GroupedBarChart = () => {
         .attr('height', d => y(0) - y(d.insuranceRate))
         .attr('fill', 'steelblue');
 
-      // Add bars for crash rates.
+      // Add bars for population density.
       svg.append('g')
         .selectAll('rect')
         .data(combinedData)
         .join('rect')
         .attr('x', d => x(d.state) + x.bandwidth() / 2)
-        .attr('y', d => y(d.crashRate))
+        .attr('y', d => y(d.populationDensity))
         .attr('width', x.bandwidth() / 2)
-        .attr('height', d => y(0) - y(d.crashRate))
+        .attr('height', d => y(0) - y(d.populationDensity))
         .attr('fill', 'orange');
 
       // Add the x-axis and label.
@@ -107,7 +113,7 @@ const GroupedBarChart = () => {
       svg.append('g')
         .attr('transform', `translate(${width - marginRight - 100},${marginTop})`)
         .selectAll('rect')
-        .data(['Insurance Rate', 'Crash Rate'])
+        .data(['Insurance Rate', 'Population Density'])
         .join('rect')
         .attr('x', 0)
         .attr('y', (d, i) => i * 20)
@@ -118,7 +124,7 @@ const GroupedBarChart = () => {
       svg.append('g')
         .attr('transform', `translate(${width - marginRight - 80},${marginTop})`)
         .selectAll('text')
-        .data(['Insurance Rate', 'Crash Rate'])
+        .data(['Insurance Rate', 'Population Density'])
         .join('text')
         .attr('x', 0)
         .attr('y', (d, i) => i * 20 + 12)
@@ -133,4 +139,4 @@ const GroupedBarChart = () => {
   return <div ref={chartRef}></div>;
 };
 
-export default GroupedBarChart;
+export default GroupedBarChartPopulation;
