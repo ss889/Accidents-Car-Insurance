@@ -54,6 +54,9 @@ const GroupedBarChartPopulation = () => {
       const marginBottom = 50;
       const marginLeft = 50;
 
+      // Clear any existing SVG content
+      d3.select(chartRef.current).selectAll('*').remove();
+
       // Create the SVG container.
       const svg = d3.select(chartRef.current)
         .append('svg')
