@@ -5,7 +5,7 @@ const GroupedBarChartPopulation = () => {
   const chartRef = useRef();
 
   useEffect(() => {
-    // Load both CSV files from the public folder
+    // Load both CSV files
     Promise.all([
       d3.csv('/Data2.csv'), // Insurance rates
       d3.csv('/Population.csv') // Population density
@@ -15,14 +15,12 @@ const GroupedBarChartPopulation = () => {
 
       // Clean and combine the data
       const combinedData = insuranceData.map((insurance) => {
-        // Find matching population data for the state
         const population = populationData.find(p => p.State === insurance.State);
         if (!insurance || !population) {
           console.error('Missing data for state:', insurance?.State);
           return null;
         }
 
-        // Extract and clean insurance rate and population density
         const insuranceRate = insurance['Avg annual cost']?.replace(/[^0-9.-]+/g, '');
         const populationDensity = population['Population Density (people/sq. mile)']?.replace(/[^0-9.-]+/g, '');
 
@@ -33,10 +31,10 @@ const GroupedBarChartPopulation = () => {
 
         return {
           state: insurance.State,
-          insuranceRate: +insuranceRate, // Convert to number
-          populationDensity: +populationDensity // Convert to number
+          insuranceRate: +insuranceRate,
+          populationDensity: +populationDensity
         };
-      }).filter(d => d !== null); // Remove null entries
+      }).filter(d => d !== null);
 
       console.log('Combined Data:', combinedData); // Debug: Check combined data
 
