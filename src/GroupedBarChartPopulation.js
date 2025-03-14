@@ -10,8 +10,11 @@ const GroupedBarChartPopulation = () => {
       d3.csv('/Data2.csv'), // Insurance rates
       d3.csv('/Population.csv') // Population density
     ]).then(([insuranceData, populationData]) => {
+      console.log('Insurance Data:', insuranceData); // Debug: Check insurance data
+      console.log('Population Data:', populationData); // Debug: Check population data
+
       // Clean and combine the data
-      const combinedData = insuranceData.map((insurance, i) => {
+      const combinedData = insuranceData.map((insurance) => {
         const population = populationData.find(p => p.State === insurance.State);
         if (!insurance || !population) {
           console.error('Missing data for state:', insurance?.State);
@@ -32,6 +35,8 @@ const GroupedBarChartPopulation = () => {
           populationDensity: +populationDensity
         };
       }).filter(d => d !== null);
+
+      console.log('Combined Data:', combinedData); // Debug: Check combined data
 
       // Declare the chart dimensions and margins.
       const width = 800;
