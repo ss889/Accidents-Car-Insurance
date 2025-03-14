@@ -1,301 +1,156 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-
-// Sample data to use if files can't be loaded
-const SAMPLE_INSURANCE_DATA = [
-  { State: 'California', 'Avg annual cost': '$2,115' },
-  { State: 'Texas', 'Avg annual cost': '$1,872' },
-  { State: 'New York', 'Avg annual cost': '$2,321' },
-  { State: 'Florida', 'Avg annual cost': '$2,560' },
-  { State: 'Illinois', 'Avg annual cost': '$1,463' },
-  { State: 'Pennsylvania', 'Avg annual cost': '$1,522' },
-  { State: 'Ohio', 'Avg annual cost': '$1,023' },
-  { State: 'Georgia', 'Avg annual cost': '$1,638' },
-  { State: 'North Carolina', 'Avg annual cost': '$1,378' },
-  { State: 'Michigan', 'Avg annual cost': '$2,105' }
-];
-
-const SAMPLE_POPULATION_DATA = [
-  { State: 'California', 'Population Density (people/sq. mile)': '253.7' },
-  { State: 'Texas', 'Population Density (people/sq. mile)': '109.9' },
-  { State: 'New York', 'Population Density (people/sq. mile)': '429.4' },
-  { State: 'Florida', 'Population Density (people/sq. mile)': '400.7' },
-  { State: 'Illinois', 'Population Density (people/sq. mile)': '231.1' },
-  { State: 'Pennsylvania', 'Population Density (people/sq. mile)': '286.5' },
-  { State: 'Ohio', 'Population Density (people/sq. mile)': '287.3' },
-  { State: 'Georgia', 'Population Density (people/sq. mile)': '184.6' },
-  { State: 'North Carolina', 'Population Density (people/sq. mile)': '214.7' },
-  { State: 'Michigan', 'Population Density (people/sq. mile)': '177.1' }
-];
 
 const GroupedBarChartPopulation = () => {
   const chartRef = useRef();
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Clear any previous chart
-    if (chartRef.current) {
-      d3.select(chartRef.current).selectAll('*').remove();
-    }
+    // Load both CSV files from the public folder
+    Promise.all([
+      d3.csv('/Data2.csv'), // Insurance rates
+      d3.csv('/Population.csv') // Population density
+    ]).then(([insuranceData, populationData]) => {
+      console.log('Insurance Data:', insuranceData); // Debug: Check insurance data
+      console.log('Population Data:', populationData); // Debug: Check population data
 
-    const loadData = async () => {
-      let insuranceData, populationData;
-      
-      try {
-        // Try to load the CSV files
-        const insuranceResponse = await fetchCSV('./Data2.csv').catch(() => 
-          fetchCSV('Data2.csv').catch(() => 
-            fetchCSV('/Data2.csv').catch(() => null)
-          )
-        );
-        
-        const populationResponse = await fetchCSV('./Population.csv').catch(() => 
-          fetchCSV('Population.csv').catch(() => 
-            fetchCSV('/Population.csv').catch(() => null)
-          )
-        );
-
-        // Use the loaded data or fall back to sample data
-        insuranceData = insuranceResponse || SAMPLE_INSURANCE_DATA;
-        populationData = populationResponse || SAMPLE_POPULATION_DATA;
-        
-        // Log what we're using
-        console.log('Using insurance data:', insuranceData);
-        console.log('Using population data:', populationData);
-        
-        // If we're using sample data, inform the user
-        if (!insuranceResponse || !populationResponse) {
-          setError('Could not load CSV files. Using sample data instead.');
-          console.warn('Using sample data because one or both CSV files could not be loaded.');
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-        insuranceData = SAMPLE_INSURANCE_DATA;
-        populationData = SAMPLE_POPULATION_DATA;
-        setError('Error loading data. Using sample data instead.');
-      }
-
-      // Process and visualize the data
-      createVisualization(insuranceData, populationData);
-    };
-
-    // Function to fetch and parse CSV
-    const fetchCSV = async (path) => {
-      try {
-        const response = await d3.csv(path);
-        return response.length > 0 ? response : null;
-      } catch (error) {
-        console.warn(`Could not load CSV from path: ${path}`, error);
-        return null;
-      }
-    };
-
-    // Function to create the visualization
-    const createVisualization = (insuranceData, populationData) => {
-      try {
-        // Clean and combine the data
-        const combinedData = insuranceData.map((insurance) => {
-          const population = populationData.find(p => p.State === insurance.State);
-          if (!insurance || !population) {
-            console.warn('Missing data for state:', insurance?.State);
-            return null;
-          }
-
-          // Parse numeric values from strings, handling different formats
-          const parseNumeric = (value) => {
-            if (!value) return 0;
-            const numericValue = value.toString().replace(/[^0-9.-]+/g, '');
-            return numericValue ? +numericValue : 0;
-          };
-
-          const insuranceRate = parseNumeric(insurance['Avg annual cost']);
-          const populationDensity = parseNumeric(population['Population Density (people/sq. mile)']);
-
-          return {
-            state: insurance.State,
-            insuranceRate: insuranceRate,
-            populationDensity: populationDensity
-          };
-        }).filter(d => d !== null);
-
-        console.log('Processed data:', combinedData);
-
-        // Check if we have data to visualize
-        if (combinedData.length === 0) {
-          setError('No valid data to visualize.');
-          return;
+      // Clean and combine the data
+      const combinedData = insuranceData.map((insurance) => {
+        // Find matching population data for the state
+        const population = populationData.find(p => p.State === insurance.State);
+        if (!insurance || !population) {
+          console.error('Missing data for state:', insurance?.State);
+          return null;
         }
 
-        // Declare the chart dimensions and margins
-        const width = 800;
-        const height = 500;
-        const marginTop = 30;
-        const marginRight = 100; // Increased margin for legend
-        const marginBottom = 70; // Increased for rotated labels
-        const marginLeft = 80;  // Increased for y-axis labels
+        // Extract and clean insurance rate and population density
+        const insuranceRate = insurance['Avg annual cost']?.replace(/[^0-9.-]+/g, '');
+        const populationDensity = population['Population Density (people/sq. mile)']?.replace(/[^0-9.-]+/g, '');
 
-        // Create the SVG container
-        const svg = d3.select(chartRef.current)
-          .append('svg')
-          .attr('width', width)
-          .attr('height', height)
-          .attr('viewBox', [0, 0, width, height])
-          .attr('style', 'max-width: 100%; height: auto;');
+        if (!insuranceRate || !populationDensity) {
+          console.error('Invalid data for state:', insurance.State);
+          return null;
+        }
 
-        // Add title
-        svg.append('text')
-          .attr('x', width / 2)
-          .attr('y', marginTop / 2)
-          .attr('text-anchor', 'middle')
-          .style('font-size', '16px')
-          .style('font-weight', 'bold')
-          .text('Insurance Rates vs. Population Density by State');
+        return {
+          state: insurance.State,
+          insuranceRate: +insuranceRate, // Convert to number
+          populationDensity: +populationDensity // Convert to number
+        };
+      }).filter(d => d !== null); // Remove null entries
 
-        // Scale the data to fit our visual space
-        // For better visualization, normalize population density to be in a similar range as insurance rates
-        const maxInsuranceRate = d3.max(combinedData, d => d.insuranceRate);
-        const maxPopulationDensity = d3.max(combinedData, d => d.populationDensity);
-        
-        // Normalize population density to a similar scale as insurance rates
-        const normalizedData = combinedData.map(d => ({
-          ...d,
-          // Scale population density relative to insurance rates for better visualization
-          normalizedDensity: (d.populationDensity / maxPopulationDensity) * maxInsuranceRate
-        }));
+      console.log('Combined Data:', combinedData); // Debug: Check combined data
 
-        // Declare the x (horizontal position) scale
-        const x = d3.scaleBand()
-          .domain(normalizedData.map(d => d.state))
-          .range([marginLeft, width - marginRight])
-          .padding(0.1);
-
-        // Declare the y (vertical position) scale
-        const y = d3.scaleLinear()
-          .domain([0, d3.max(normalizedData, d => Math.max(d.insuranceRate, d.normalizedDensity)) * 1.1])
-          .range([height - marginBottom, marginTop]);
-
-        // Add bars for insurance rates
-        svg.append('g')
-          .selectAll('rect.insurance')
-          .data(normalizedData)
-          .join('rect')
-          .attr('class', 'insurance')
-          .attr('x', d => x(d.state))
-          .attr('y', d => y(d.insuranceRate))
-          .attr('width', x.bandwidth() / 2)
-          .attr('height', d => Math.max(0, y(0) - y(d.insuranceRate)))
-          .attr('fill', 'steelblue');
-
-        // Add bars for population density
-        svg.append('g')
-          .selectAll('rect.population')
-          .data(normalizedData)
-          .join('rect')
-          .attr('class', 'population')
-          .attr('x', d => x(d.state) + x.bandwidth() / 2)
-          .attr('y', d => y(d.normalizedDensity))
-          .attr('width', x.bandwidth() / 2)
-          .attr('height', d => Math.max(0, y(0) - y(d.normalizedDensity)))
-          .attr('fill', 'orange');
-
-        // Add the x-axis
-        svg.append('g')
-          .attr('transform', `translate(0,${height - marginBottom})`)
-          .call(d3.axisBottom(x))
-          .selectAll('text')
-          .attr('transform', 'rotate(-45)')
-          .style('text-anchor', 'end')
-          .attr('dx', '-.8em')
-          .attr('dy', '.15em');
-
-        // Add the x-axis label
-        svg.append('text')
-          .attr('x', width / 2)
-          .attr('y', height - 10)
-          .attr('text-anchor', 'middle')
-          .text('State');
-
-        // Create two separate y-axes for clarity
-        // Insurance rate y-axis (left)
-        svg.append('g')
-          .attr('transform', `translate(${marginLeft},0)`)
-          .call(d3.axisLeft(y).tickFormat(d => `$${d}`))
-          .call(g => g.append('text')
-            .attr('x', -marginLeft + 10)
-            .attr('y', 10)
-            .attr('fill', 'steelblue')
-            .attr('text-anchor', 'start')
-            .text('Insurance Rate ($)'));
-
-        // Population density right axis
-        const yRight = d3.scaleLinear()
-          .domain([0, (maxPopulationDensity * 1.1)])
-          .range([height - marginBottom, marginTop]);
-
-        svg.append('g')
-          .attr('transform', `translate(${width - marginRight + 40},0)`)
-          .call(d3.axisRight(yRight))
-          .call(g => g.append('text')
-            .attr('x', 35)
-            .attr('y', 10)
-            .attr('fill', 'orange')
-            .attr('text-anchor', 'start')
-            .text('Population Density (people/sq mi)'));
-
-        // Add a legend
-        const legend = svg.append('g')
-          .attr('transform', `translate(${width - marginRight + 10},${marginTop + 30})`);
-
-        // Insurance rate legend item
-        legend.append('rect')
-          .attr('x', 0)
-          .attr('y', 0)
-          .attr('width', 15)
-          .attr('height', 15)
-          .attr('fill', 'steelblue');
-
-        legend.append('text')
-          .attr('x', 20)
-          .attr('y', 12)
-          .text('Insurance Rate')
-          .attr('font-size', '12px');
-
-        // Population density legend item
-        legend.append('rect')
-          .attr('x', 0)
-          .attr('y', 25)
-          .attr('width', 15)
-          .attr('height', 15)
-          .attr('fill', 'orange');
-
-        legend.append('text')
-          .attr('x', 20)
-          .attr('y', 37)
-          .text('Population Density')
-          .attr('font-size', '12px');
-
-      } catch (error) {
-        console.error('Error creating visualization:', error);
-        setError('Error creating visualization: ' + error.message);
+      // If no valid data, show an error message
+      if (combinedData.length === 0) {
+        console.error('No valid data to visualize.');
+        return;
       }
-    };
 
-    loadData();
+      // Declare the chart dimensions and margins.
+      const width = 800;
+      const height = 500;
+      const marginTop = 30;
+      const marginRight = 30;
+      const marginBottom = 50;
+      const marginLeft = 50;
 
-    // Cleanup on component unmount
-    return () => {
-      if (chartRef.current) {
-        d3.select(chartRef.current).selectAll('*').remove();
-      }
-    };
-  }, []); // Empty dependency array ensures this runs only once
+      // Create the SVG container.
+      const svg = d3.select(chartRef.current)
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('viewBox', [0, 0, width, height])
+        .attr('style', 'max-width: 100%; height: auto; border: 1px solid red;'); // Add a red border for debugging
 
-  return (
-    <div>
-      {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-      <div ref={chartRef}></div>
-    </div>
-  );
+      // Declare the x (horizontal position) scale.
+      const x = d3.scaleBand()
+        .domain(combinedData.map(d => d.state)) // States on the x-axis
+        .range([marginLeft, width - marginRight])
+        .padding(0.1);
+
+      // Declare the y (vertical position) scale.
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(combinedData, d => Math.max(d.insuranceRate, d.populationDensity))]) // Max value for y-axis
+        .range([height - marginBottom, marginTop]);
+
+      // Add bars for insurance rates.
+      svg.append('g')
+        .selectAll('rect')
+        .data(combinedData)
+        .join('rect')
+        .attr('x', d => x(d.state)) // Position bars for each state
+        .attr('y', d => y(d.insuranceRate)) // Height based on insurance rate
+        .attr('width', x.bandwidth() / 2) // Half the bandwidth for grouped bars
+        .attr('height', d => y(0) - y(d.insuranceRate)) // Bar height
+        .attr('fill', 'steelblue') // Blue color for insurance rates
+        .on('mouseover', (event, d) => {
+          console.log('Insurance Rate Bar:', d); // Debug: Log bar data on hover
+        });
+
+      // Add bars for population density.
+      svg.append('g')
+        .selectAll('rect')
+        .data(combinedData)
+        .join('rect')
+        .attr('x', d => x(d.state) + x.bandwidth() / 2) // Offset bars for population density
+        .attr('y', d => y(d.populationDensity)) // Height based on population density
+        .attr('width', x.bandwidth() / 2) // Half the bandwidth for grouped bars
+        .attr('height', d => y(0) - y(d.populationDensity)) // Bar height
+        .attr('fill', 'orange') // Orange color for population density
+        .on('mouseover', (event, d) => {
+          console.log('Population Density Bar:', d); // Debug: Log bar data on hover
+        });
+
+      // Add the x-axis and label.
+      svg.append('g')
+        .attr('transform', `translate(0,${height - marginBottom})`)
+        .call(d3.axisBottom(x)) // Add x-axis
+        .call(g => g.append('text')
+          .attr('x', width - marginRight)
+          .attr('y', 30)
+          .attr('fill', 'currentColor')
+          .attr('text-anchor', 'end')
+          .text('State'));
+
+      // Add the y-axis and label.
+      svg.append('g')
+        .attr('transform', `translate(${marginLeft},0)`)
+        .call(d3.axisLeft(y)) // Add y-axis
+        .call(g => g.append('text')
+          .attr('x', -marginLeft)
+          .attr('y', 10)
+          .attr('fill', 'currentColor')
+          .attr('text-anchor', 'start')
+          .text('Rate'));
+
+      // Add a legend.
+      svg.append('g')
+        .attr('transform', `translate(${width - marginRight - 100},${marginTop})`)
+        .selectAll('rect')
+        .data(['Insurance Rate', 'Population Density'])
+        .join('rect')
+        .attr('x', 0)
+        .attr('y', (d, i) => i * 20)
+        .attr('width', 15)
+        .attr('height', 15)
+        .attr('fill', (d, i) => i === 0 ? 'steelblue' : 'orange');
+
+      svg.append('g')
+        .attr('transform', `translate(${width - marginRight - 80},${marginTop})`)
+        .selectAll('text')
+        .data(['Insurance Rate', 'Population Density'])
+        .join('text')
+        .attr('x', 0)
+        .attr('y', (d, i) => i * 20 + 12)
+        .text(d => d)
+        .attr('font-size', '12px')
+        .attr('fill', 'black');
+    }).catch((error) => {
+      console.error('Error loading or processing CSV files:', error); // Error handling
+    });
+  }, []); // <-- Empty dependency array ensures this runs only once
+
+  return <div ref={chartRef}></div>;
 };
 
 export default GroupedBarChartPopulation;
