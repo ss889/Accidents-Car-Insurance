@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/Accidents-Car-Insurance/static/css/main.e087fc58.css",
-    "main.js": "/Accidents-Car-Insurance/static/js/main.591ad605.js",
+    "main.css": "/Accidents-Car-Insurance/static/css/main.dc4d6ff2.css",
+    "main.js": "/Accidents-Car-Insurance/static/js/main.229ea058.js",
     "index.html": "/Accidents-Car-Insurance/index.html",
-    "main.e087fc58.css.map": "/Accidents-Car-Insurance/static/css/main.e087fc58.css.map",
-    "main.591ad605.js.map": "/Accidents-Car-Insurance/static/js/main.591ad605.js.map"
+    "main.dc4d6ff2.css.map": "/Accidents-Car-Insurance/static/css/main.dc4d6ff2.css.map",
+    "main.229ea058.js.map": "/Accidents-Car-Insurance/static/js/main.229ea058.js.map"
   },
   "entrypoints": [
-    "static/css/main.e087fc58.css",
-    "static/js/main.591ad605.js"
+    "static/css/main.dc4d6ff2.css",
+    "static/js/main.229ea058.js"
   ]
 }
