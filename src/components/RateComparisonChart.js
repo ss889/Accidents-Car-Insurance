@@ -18,9 +18,9 @@ const RateComparisonChart = ({ selectedState }) => {
 
     // Load and process the data
     Promise.all([
-      d3.csv('/data/insurance_rates.csv'),
-      d3.csv('/data/accident_rates.csv'),
-      d3.csv('/data/population_density.csv')
+      d3.csv(`${process.env.PUBLIC_URL}/data/insurance_rates.csv`),
+      d3.csv(`${process.env.PUBLIC_URL}/data/accident_rates.csv`),
+      d3.csv(`${process.env.PUBLIC_URL}/data/population_density.csv`)
     ]).then(([insuranceData, accidentData, populationData]) => {
       // Combine data
       const combinedData = insuranceData.map(d => {

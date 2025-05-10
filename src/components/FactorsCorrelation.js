@@ -21,8 +21,8 @@ const FactorsCorrelation = ({ selectedState }) => {
 
     // Load the data
     Promise.all([
-      d3.csv('/data/insurance_rates.csv'),
-      d3.csv('/data/factors.csv')
+      d3.csv(`${process.env.PUBLIC_URL}/data/insurance_rates.csv`),
+      d3.csv(`${process.env.PUBLIC_URL}/data/factors.csv`)
     ]).then(([insuranceData, factorsData]) => {
       const state = selectedState || insuranceData[0].state;
       const stateData = factorsData.find(d => d.state === state);

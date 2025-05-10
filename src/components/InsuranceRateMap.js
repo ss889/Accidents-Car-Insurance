@@ -23,7 +23,7 @@ const InsuranceRateMap = ({ onStateSelect }) => {
     // Load US map data and insurance rates
     Promise.all([
       d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json'),
-      d3.csv('/data/insurance_rates.csv')
+      d3.csv(`${process.env.PUBLIC_URL}/data/insurance_rates.csv`)
     ]).then(([us, rates]) => {
       const states = new Map(rates.map(d => [d.state, +d.rate]));
       
