@@ -7,8 +7,8 @@ const GroupedBarChartPopulation = () => {
   useEffect(() => {
     // Load both CSV files
     Promise.all([
-      d3.csv('/Data2.csv'), // Insurance rates
-      d3.csv('/Population.csv') // Population density
+      d3.csv(`${process.env.PUBLIC_URL}/Data2.csv`), // Insurance rates
+      d3.csv(`${process.env.PUBLIC_URL}/Population.csv`) // Population density
     ]).then(([insuranceData, populationData]) => {
       console.log('Insurance Data:', insuranceData); // Debug: Check insurance data
       console.log('Population Data:', populationData); // Debug: Check population data

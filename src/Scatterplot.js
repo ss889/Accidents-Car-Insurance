@@ -7,8 +7,8 @@ const Scatterplot = () => {
   useEffect(() => {
     // Load both CSV files
     Promise.all([
-      d3.csv('/Data2.csv'), // Insurance rates
-      d3.csv('/Data.csv')   // Crash rates
+      d3.csv(`${process.env.PUBLIC_URL}/Data2.csv`), // Insurance rates
+      d3.csv(`${process.env.PUBLIC_URL}/Data.csv`)   // Crash rates
     ]).then(([insuranceData, crashData]) => {
       // Clean and combine the data
       const combinedData = insuranceData.map((insurance, i) => {
